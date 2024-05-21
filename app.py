@@ -81,14 +81,14 @@ def jobs():
         jobs = apiResult['jobs']
 
         for i in jobs:
-            # i['naziv'] = i['jobTitle']
+            i['naziv'] = i['jobTitle']
 
-            jobsDb.append(
-                Jobs(id=int(i["id"]), naziv=i["jobTitle"] + 'sadas', kategorija=i['jobIndustry'][0],
-                     ocjena=5))
+            # jobsDb.append(
+                # Jobs(id=int(i["id"]), naziv=i["jobTitle"] + 'sadas', kategorija=i['jobIndustry'][0],
+                #      ocjena=5))
 
-        db.session.add_all(jobsDb)
-        db.session.commit()
+        # db.session.add_all(jobsDb)
+        # db.session.commit()
 
     # print("callApi: ", callApi)
     # print("call db: ", callDb)
