@@ -1,0 +1,43 @@
+{% extends 'Base.html' %}
+
+{% block title %} jobs {% endblock %}
+
+{% block sadrzaj %}
+    <div>
+        <h1>Pretraživanje poslova</h1>
+        <form action="/jobs" method="post">
+            <input type="number" value="5" name="count" placeholder="Broj pojmova">
+            <input  type="text" name="keyword" placeholder="Kljucna rijec">
+            <input  type="text" name="location" placeholder="Lokacija">
+            <input  type="text" name="industry" placeholder="Industrija">
+
+            <input type="submit" name="callApi" value="Call api">
+            <input type="submit" name="callDb" value="Pretraži poslove iz baze">
+        </form>
+    </div>
+
+    <div>
+
+        <table>
+          <tr>
+            <th>Id</th>
+            <th>Naziv</th>
+            <th>Kategorija</th>
+            <th>Ocjena</th>
+          </tr>
+          <tr>
+              {% for job in jobs %}
+            <td>{{job.id}}</td>
+            <td>{{job.naziv}}</td>
+            <td>{{job.kategorija}}</td>
+            <td>{{job.ocjena}}</td>
+          </tr>
+            {% endfor %}
+        </table>
+
+    </div>
+{% endblock %}
+
+{% block podnozje %}
+    autor: DD
+{% endblock %}
