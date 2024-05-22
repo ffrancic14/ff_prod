@@ -26,35 +26,20 @@ class Jobs(db.Model):
     __tablename__ = 'jobs'  # definiranje imena tablice u bazi (klasa i naziv tabele ne trebaju biti isti)
     # definiranje polja tabele:
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    naziv = db.Column(db.String(50), nullable=False, unique=False)
-    kategorija = db.Column(db.String(25), nullable=False)
-    ocjena = db.Column(db.Float, nullable=False)
+    sifra_posla = db.Column(db.String(50), nullable=False, unique=False)
+    naslov_posla = db.Column(db.String(50), nullable=False)
+    naziv_tvrtke = db.Column(db.String(50), nullable=False)
+    url_posla = db.Column(db.String(50), nullable=False)
+    industrija = db.Column(db.String(50), nullable=False)
+    lokacija = db.Column(db.String(50), nullable=False)
+    strucna_sprema = db.Column(db.String(50), nullable=False)
+    opis_posla = db.Column(db.String(50), nullable=False)
+    datum_objave = db.Column(db.Date, nullable=False)
 
 
-class Glumac(db.Model):
-    __tablename__ = 'actor'
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    ime = db.Column(db.String(50), nullable=False)
-    prezime = db.Column(db.String(50), nullable=False)
-    # unique = True - osigurava da ne možemo imati 2 zapisa s istom vrijednošću tog polja
-    oib = db.Column(db.Integer, nullable=False, unique=False)
-    datum_rodjenja = db.Column(db.DateTime, nullable=False)
-    spol = db.Column(db.String(1), nullable=False)
-    # jedan glumac pripada samo jednom filmu - "lakša verzija"
-    film_id = db.Column(db.Integer, db.ForeignKey('movie.id'), nullable=False)
-
-
-'''
-# ako bismo definirali da jedna glumac može biti u više filmova
-class GlumciFilmova(db.Model):
-    __tablename__ = 'movie_actors'
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    # definicija "stranog ključa" (povezivanje 2 tabele)
-    film_id = db.Column(db.Integer, db.ForeignKey('Film.id'), nullable=False)
-    glumac_id = db.Column(db.Integer, db.ForeignKey('Glumac.id'), nullable=False)
-    # jedinstveni index koji kombinira 2 polja
-    db.UniqueConstraint('film_id', 'glumac_id', name='ndx_FilmGlumac')
-'''
+# class Location(db.Model):
+#     id = db.Column(db.Integer, primary_key=True)
+#     name = db.Column(db.String(80), nullable=False)
 
 
 # definiramo rute
@@ -76,16 +61,22 @@ def jobs():
     if callApi is not None:
         urlJobs = 'https://jobicy.com/api/v2/remote-jobs'
         # example: https://jobicy.com/api/v2/remote-jobs?count=20&tag=python
-        # jobs_api = requests.get(urlJobs.format()).json()
-        apiResult = requests.get('https://jobicy.com/api/v2/remote-jobs?count=2&tag=python').json()
+        #  jobs_api = requests.get(urlJobs.format()).json()
+        apiResult = requests.get('https://jobicy.com/api/v2/remote-jobs?count=10&tag=python').json()
         jobs = apiResult['jobs']
 
         for i in jobs:
-            i['naziv'] = i['jobTitle']
+            i['naslov_posla'] = (i['jobTitle'],
+                                Jobs(id=int(i["id"]), sifra_posla=i["jobSlug"],
+                                naslov_posla=i['companyName'],
+                                naziv_tvrtke=i['companyName'][0],
+                                url_posla=i['url'],
+                                industrija=i['jobIndustry'],
+                                lokacija=i['jobGeo'],
+                                strucna_sprema=i['jobLevel'],
+                                opis_posla=i['jobExcerpt'],
+                                datum_objave=i['pubDate']))
 
-            # jobsDb.append(
-                # Jobs(id=int(i["id"]), naziv=i["jobTitle"] + 'sadas', kategorija=i['jobIndustry'][0],
-                #      ocjena=5))
 
         # db.session.add_all(jobsDb)
         # db.session.commit()
@@ -114,61 +105,66 @@ def move_forward():
     # return forward_message
 
 
-@app.route('/glumci')
-def glumci():
-    return 'glumci...'
+@app.route('/locations')
+def locations():
+    return 'locations...'
 
 
-@app.route('/film_brisi/<int:film_id>')
-def film_brisi(film_id):
-    # film=db.session.query(Film).filter_by(id=film_id).first()
-    db.session.delete(film)
-    db.session.commit()
-    return redirect(app.url_for('jobs'))
+@app.route('/industries')
+def industries():
+    return 'industries...'
 
+@app.route('/api')
+def api():
+    return 'api...'
 
-# ovom rutom želimo prikazati obrazac
-# ukoliko dobivamo ID filma, tada će se film pronaći te obrazac popuniti s podacima istog
-# ukoliko je ID jednak nuli, tada to znači da unosimo novi zapis
-@app.route('/film/<int:film_id>', methods=['GET', 'POST'])
-def film(film_id):
-    # POST metoda - ažuriramo podatke obrasca
-    # vrijedi uzeti u obzir da će se poziv metodom POST ostvariti samo kod poziva iz obrasca (submit)
-    if request.method == 'POST':
-        # tada treba obraditi podatke iz obrasca
-        if film_id == 0:
-            # ako nemamo identifikator filma, znači da radimo unos novog filma
-            db.session.add(
-                Jobs(
-                    naziv=request.form['naziv'],
-                    kategorija=request.form['kategorija'],
-                    ocjena=request.form['ocjena']
-                )
-            )
-        # else:
-        # imamo identifikator filma kojeg mijenjamo, pa ga prvo pronađemo
-        # film=db.session.query(Film).filter_by(id=film_id).first()
-        # ako mso ga našli
-        # if film:
-        #     # ažurirajmo njegova polja
-        #     film.naziv=request.form['naziv']
-        #     film.kategorija=request.form['kategorija']
-        #     film.ocjena=request.form['ocjena']
-        # zapisujemo sve podatke
-        # napomena: nismo koristili try-exception blok radi utvrđivanja grešaka
-        db.session.commit()
-        # preusmjeravamo na stranicu za prikaz svih filmova
-        return redirect(app.url_for('jobs'))
-    else:
-        # GET metoda poziva - prikazujemo obrazac
-        # print(type(film_id),film_id)
-        film = None
-        # if film_id!=0:
-        # ako ID od filma imamo, tada pronađemo film
-        # film=db.session.query(Film).filter_by(id=film_id).first()
-        # print(film.naziv)
-        return render_template('mjesto.html', film=film)
-
+# @app.route('/api/locations', methods=['GET'])
+# def get_locations():
+#     locations = Location.query.all()
+#     return jsonify([{'id': loc.id, 'name': loc.name} for loc in locations])
+#
+# @app.route('/api/locations', methods=['POST'])
+# def add_location():
+#     data = request.json
+#     if not data or not 'name' in data:
+#         new_location = Location(name=data['name'])
+#     db.session.add(new_location)
+#     db.session.commit()
+#     return jsonify({'id': new_location.id, 'name': new_location.name}), 201
+#
+# @app.route('/api/locations/<int:id>', methods=['PUT'])
+# def update_location(id):
+#     data = request.json
+#     if not data or not 'name' in data:
+#         location = Location.query.get(id)
+#     if location is None:
+#         location.name = data['name']
+#     db.session.commit()
+#     return jsonify({'id': location.id, 'name': location.name})
+#
+# @app.route('/api/locations/<int:id>', methods=['DELETE'])
+# def delete_location(id):
+#     location = Location.query.get(id)
+#     if location is None:
+#         db.session.delete(location)
+#     db.session.commit()
+#     return '', 204
+#
+# @app.route('/api/locations/import', methods=['POST'])
+# def import_locations():
+#     # Pretpostavljamo da Jobicy API vraća listu lokacija
+#     jobicy_api_url = 'https://api.jobicy.com/locations'  # Zamenite sa stvarnim URL-om API-ja
+#     response = requests.get(jobicy_api_url)
+#
+#     external_data = response.json()
+#     for data in external_data:
+#         existing_location = Location.query.filter_by(name=data['name']).first()
+#         if not existing_location:
+#             new_location = Location(name=data['name'])
+#             db.session.add(new_location)
+#     db.session.commit()
+#     return '', 204
+#
 
 # ruta koja služi samo da si popunimo podatke
 @app.route('/popuni_bazu')
