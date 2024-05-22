@@ -1,0 +1,71 @@
+{% extends 'Base.html' %}
+
+{% block title %} jobs {% endblock %}
+
+{% block sadrzaj %}
+    <title>Lokacije (jobGeo)</title>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        table, th, td {
+            border: 1px solid black;
+        }
+        th, td {
+            padding: 8px;
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+
+<h1>Lokacije (jobGeo)</h1>
+
+<button onclick="loadLocationsFromDb()">Prikaži iz baze</button>
+<button onclick="importLocations()">Preuzmi i importuj podatke</button>
+<br><br>
+
+<table id="locationsTable">
+    <thead>
+        <tr>
+            <th>Id</th>
+            <th>Naziv</th>
+        </tr>
+    </thead>
+    <tbody>
+        <!-- Lokacije će biti učitane ovde -->
+    </tbody>
+</table>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    function loadLocationsFromDb() {
+        $.get('/api/locations', function(data) {
+            populateTable(data);
+        });
+    }
+
+    function importLocations() {
+        $.post('/api/locations/import', function() {
+            alert('Podaci su uspešno importovani u bazu.');
+            loadLocationsFromDb(); // Osveži prikaz iz baze nakon importovanja
+        });
+    }
+
+    function populateTable(data) {
+        const tbody = $('#locationsTable tbody');
+        tbody.empty();
+        data.forEach(function(location) {
+            tbody.append(`
+                <tr>
+                    <td>${location.id}</td>
+                    <td>${location.name}</td>
+                </tr>
+            `);
+        });
+    }
+</script>
+
+</body>
+</html>

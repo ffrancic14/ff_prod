@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Industrije (jobIndustry)</title>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        table, th, td {
+            border: 1px solid black;
+        }
+        th, td {
+            padding: 8px;
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+
+<h1>Industrije (jobIndustry)</h1>
+
+<button onclick="loadIndustriesFromDb()">Prikaži iz baze</button>
+<button onclick="importIndustries()">Preuzmi i importuj podatke</button>
+<br><br>
+
+<table id="industriesTable">
+    <thead>
+        <tr>
+            <th>Id</th>
+            <th>Naziv</th>
+        </tr>
+    </thead>
+    <tbody>
+        <!-- Industrije će biti učitane ovde -->
+    </tbody>
+</table>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    function loadIndustriesFromDb() {
+        $.get('/api/industries', function(data) {
+            populateTable(data);
+        });
+    }
+
+    function importIndustries() {
+        $.post('/api/industries/import', function() {
+            alert('Podaci su uspešno importovani u bazu.');
+            loadIndustriesFromDb(); // Osveži prikaz iz baze nakon importovanja
+        });
+    }
+
+    function populateTable(data) {
+        const tbody = $('#industriesTable tbody');
+        tbody.empty();
+        data.forEach(function(industry) {
+            tbody.append(`
+                <tr>
+                    <td>${industry.id}</td>
+                    <td>${industry.name}</td>
+                </tr>
+            `);
+        });
+    }
+</script>
+
+</body>
+</html>

@@ -3,117 +3,95 @@
 {% block title %} jobs {% endblock %}
 
 {% block sadrzaj %}
-    <div>
-        <h1>Pretraživanje poslova</h1>
-        <form action="/jobs" method="post">
-            <label >Broj prikazanih oglasa:</label>
-            <input type="number" name="count" placeholder="Broj oglasa">
-            <div>
-    <label for="locationSelect">Izaberite ili unesite lokaciju:</label>
-    <select id="locationSelect" name="location" onchange="toggleInputField()">
-        <option value="" disabled selected hidden>Lokacija</option>
-<!--        <option value="zagreb">Zagreb</option>-->
-<!--        <option value="split">Split</option>-->
-<!--        <option value="rijeka">Rijeka</option>-->
-<!--        <option value="osijek">Osijek</option>-->
-        <option value="other">Ostalo...</option>
-    </select>
+    <content style="margin-bottom:30px;">
+        <div>
+            <h1>Pretraživanje poslova</h1>
+            <form action="/jobs" method="post">
+                <label >Broj prikazanih oglasa:</label>
+                <input type="number" name="count" placeholder="Broj oglasa">
+                <input type="text" id="locationInput" name="location" placeholder="Unesite lokaciju">
+                <input type="text" id="industryInput" value="engineering" name="jobIndustry" placeholder="Unesite industriju">
+                <input type="text" name="tag" placeholder="Oznaka">
+                <input type="submit" name="callApi" value="dohvati poslove od api servisa">
+                <input type="submit" name="callDb" value="dohvati poslove iz baze">
+            </form>
+        </div>
 
-    <input type="text" id="locationInput" name="location" placeholder="Unesite lokaciju" class="hidden">
-</div>
-
-<script>
-    function toggleInputField() {
-        const locationSelect = document.getElementById('locationSelect');
-        const locationInput = document.getElementById('locationInput');
-
-        if (locationSelect.value === 'other') {
-            locationInput.classList.remove('hidden');
-            locationInput.name = 'location'; // Ensure the input field has the correct name attribute
-            locationSelect.name = ''; // Remove the name attribute from the select field
-        } else {
-            locationInput.classList.add('hidden');
-            locationInput.name = ''; // Remove the name attribute from the input field
-            locationSelect.name = 'location'; // Ensure the select field has the correct name attribute
-        }
-    }
-</script>
-            <div>
-    <label for="industrySelect">Izaberite ili unesite industriju:</label>
-    <select id="industrySelect" name="industry" onchange="toggleIndustryInput()">
-        <option value="" disabled selected hidden>Industrija</option>
-<!--        <option value="it">IT</option>-->
-<!--        <option value="finance">Financije</option>-->
-<!--        <option value="healthcare">Zdravstvo</option>-->
-<!--        <option value="education">Obrazovanje</option>-->
-        <option value="other">Ostalo...</option>
-    </select>
-
-    <input type="text" id="industryInput" name="industry" placeholder="Unesite industriju" class="hidden">
-</div>
-
-<script>
-    function toggleIndustryInput() {
-        const industrySelect = document.getElementById('industrySelect');
-        const industryInput = document.getElementById('industryInput');
-
-        if (industrySelect.value === 'other') {
-            industryInput.classList.remove('hidden');
-            industryInput.name = 'industry'; // Ensure the input field has the correct name attribute
-            industrySelect.name = ''; // Remove the name attribute from the select field
-        } else {
-            industryInput.classList.add('hidden');
-            industryInput.name = ''; // Remove the name attribute from the input field
-            industrySelect.name = 'industry'; // Ensure the select field has the correct name attribute
-        }
-    }
-</script>
-            <label >Pretraživanje po nazivu posla:</label>
-            <input  type="text" name="tag" placeholder="Oznaka">
-
-            <input type="submit" name="callApi" value="Call api">
-            <input type="submit" name="callDb" value="Pretraži poslove iz baze">
-
-        </form>
-    </div>
-
-    <div>
-    {% if jobs %}
-        <table>
-            <tr>
-                <th>Id</th>
-                <th>Šifra_posla</th>
-                <th>Naslov_posla</th>
-                <th>Naziv_tvrtke</th>
-                <th>URL</th>
-                <th>Industrija</th>
-                <th>Lokacija</th>
-                <th>Strucna_sprema</th>
-                <th>Opis_posla</th>
-                <th>Datum_objave</th>
-            </tr>
-            {% for job in jobs %}
-            <tr>
-                <td>{{ job.id }}</td>
-                <td>{{ job.sifra_posla }}</td>
-                <td>{{ job.naslov_posla }}</td>
-                <td>{{ job.naziv_tvrtke }}</td>
-                <td>{{ job.url_posla }}</td>
-                <td>{{ job.industrija }}</td>
-                <td>{{ job.lokacija }}</td>
-                <td>{{ job.strucna_sprema }}</td>
-                <td>{{ job.opis_posla }}</td>
-                <td>{{ job.datum_objave }}</td>
-            </tr>
-            {% endfor %}
-        </table>
-    {% else %}
+        {% if apiJobs %}
+        <div>
+            <h1>Poslovi api servis</h1>
+            <table class="scrolldown">
+                <tr>
+                    <th>Id</th>
+                    <th>Šifra_posla</th>
+                    <th>Naslov_posla</th>
+                    <th>Naziv_tvrtke</th>
+                    <th>URL</th>
+                    <th>Industrija</th>
+                    <th>Lokacija</th>
+                    <th>Strucna_sprema</th>
+                    <th>Opis_posla</th>
+                    <th>Datum_objave</th>
+                </tr>
+                {% for job in apiJobs %}
+                <tr>
+                    <td>{{ job.id }}</td>
+                    <td>{{ job.sifra_posla }}</td>
+                    <td>{{ job.naslov_posla }}</td>
+                    <td>{{ job.naziv_tvrtke }}</td>
+                    <td>{{ job.url_posla }}</td>
+                    <td>{{ job.industrija }}</td>
+                    <td>{{ job.lokacija }}</td>
+                    <td>{{ job.strucna_sprema }}</td>
+                    <td>{{ job.opis_posla }}</td>
+                    <td>{{ job.datum_objave }}</td>
+                </tr>
+                {% endfor %}
+            </table>
+        </div>
+        {% else %}
         <p>Nema podataka za prikazivanje.</p>
-    {% endif %}
-</div>
+        {% endif %}
 
+        <div>
+            {% if dbJobs %}
+            <h1>Poslovi iz baze</h1>
+            <table class="scrolldown">
+                <tr>
+                    <th>Id</th>
+                    <th>Šifra_posla</th>
+                    <th>Naslov_posla</th>
+                    <th>Naziv_tvrtke</th>
+                    <th>URL</th>
+                    <th>Industrija</th>
+                    <th>Lokacija</th>
+                    <th>Strucna_sprema</th>
+                    <th>Opis_posla</th>
+                    <th>Datum_objave</th>
+                </tr>
+                {% for job in dbJobs %}
+                <tr>
+                    <td>{{ job.id }}</td>
+                    <td>{{ job.sifra_posla }}</td>
+                    <td>{{ job.naslov_posla }}</td>
+                    <td>{{ job.naziv_tvrtke }}</td>
+                    <td>{{ job.url_posla }}</td>
+                    <td>{{ job.industrija }}</td>
+                    <td>{{ job.lokacija }}</td>
+                    <td>{{ job.strucna_sprema }}</td>
+                    <td>{{ job.opis_posla }}</td>
+                    <td>{{ job.datum_objave }}</td>
+                </tr>
+                {% endfor %}
+            </table>
+        </div>
+        {% else %}
 
-    </div>
+        {% endif %}
+
+        </div>
+    </content>
+
 {% endblock %}
 
 {% block podnozje %}
