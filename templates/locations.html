@@ -1,71 +1,100 @@
 {% extends 'Base.html' %}
 
-{% block title %} jobs {% endblock %}
+{% block title %} Lokacije (jobGeo) {% endblock %}
 
 {% block sadrzaj %}
-    <title>Lokacije (jobGeo)</title>
-    <style>
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        table, th, td {
-            border: 1px solid black;
-        }
-        th, td {
-            padding: 8px;
-            text-align: left;
-        }
-    </style>
-</head>
-<body>
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Lokacije (jobGeo)</title>
+    </head>
+    <body>
 
-<h1>Lokacije (jobGeo)</h1>
+    <h1>Lokacije (jobGeo)</h1>
 
-<button onclick="loadLocationsFromDb()">Prikaži iz baze</button>
-<button onclick="importLocations()">Preuzmi i importuj podatke</button>
-<br><br>
+    <table id="locationsTable" border="1">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Naziv</th>
+                <th>Akcije</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for location in locations_data %}
+            <tr>
+                <td>{{ location.id }}</td>
+                <td>{{ location.name }}</td>
+                <td>
+                    <button class="updateBtn" data-id="{{ location.id }}">Ažuriraj</button>
+                    <button class="deleteBtn" data-id="{{ location.id }}">Obriši</button>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
 
-<table id="locationsTable">
-    <thead>
-        <tr>
-            <th>Id</th>
-            <th>Naziv</th>
-        </tr>
-    </thead>
-    <tbody>
-        <!-- Lokacije će biti učitane ovde -->
-    </tbody>
-</table>
+    <form id="addLocationForm">
+        <input type="text" id="newLocation" placeholder="Unesite novu lokaciju">
+        <button type="submit">Dodaj lokaciju</button>
+    </form>
 
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script>
-    function loadLocationsFromDb() {
-        $.get('/api/locations', function(data) {
-            populateTable(data);
+    <button id="importBtn">Importaj lokacije</button>
+
+    <script>
+        document.getElementById('importBtn').addEventListener('click', function() {
+            fetch('/import-locations', { method: 'POST' })
+                .then(response => response.json())
+                .then(data => alert(data.message))
+                .catch(error => console.error('Došlo je do greške:', error));
         });
-    }
 
-    function importLocations() {
-        $.post('/api/locations/import', function() {
-            alert('Podaci su uspešno importovani u bazu.');
-            loadLocationsFromDb(); // Osveži prikaz iz baze nakon importovanja
+        document.getElementById('addLocationForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const newLocation = document.getElementById('newLocation').value;
+            fetch('/add-location', { method: 'POST', body: new URLSearchParams({ new_location: newLocation }) })
+                .then(response => response.json())
+                .then(data => {
+                    alert(data.message);
+                    location.reload(); // Refresh page to see the added location
+                })
+                .catch(error => console.error('Došlo je do greške:', error));
         });
-    }
 
-    function populateTable(data) {
-        const tbody = $('#locationsTable tbody');
-        tbody.empty();
-        data.forEach(function(location) {
-            tbody.append(`
-                <tr>
-                    <td>${location.id}</td>
-                    <td>${location.name}</td>
-                </tr>
-            `);
+        document.querySelectorAll('.updateBtn').forEach(button => {
+            button.addEventListener('click', function() {
+                const id = this.dataset.id;
+                const updatedLocation = prompt('Unesite ažuriranu lokaciju:');
+                if (updatedLocation) {
+                    fetch(`/update-location/${id}`, { method: 'PUT', body: new URLSearchParams({ updated_location: updatedLocation }) })
+                        .then(response => response.json())
+                        .then(data => {
+                            alert(data.message);
+                            location.reload(); // Refresh page to see the updated location
+                        })
+                        .catch(error => console.error('Došlo je do greške:', error));
+                }
+            });
         });
-    }
-</script>
 
-</body>
-</html>
+        document.querySelectorAll('.deleteBtn').forEach(button => {
+            button.addEventListener('click', function() {
+                const id = this.dataset.id;
+                if (confirm('Da li ste sigurni da želite obrisati ovu lokaciju?')) {
+                    fetch(`/delete-location/${id}`, { method: 'DELETE' })
+                        .then(response => response.json())
+                        .then(data => {
+                            alert(data.message);
+                            location.reload(); // Refresh page to see the deleted location
+                        })
+                        .catch(error => console.error('Došlo je do greške:', error));
+                }
+            });
+        });
+    </script>
+
+    </body>
+    </html>
+{% endblock %}

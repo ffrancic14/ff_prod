@@ -1,71 +1,100 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Industrije (jobIndustry)</title>
-    <style>
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        table, th, td {
-            border: 1px solid black;
-        }
-        th, td {
-            padding: 8px;
-            text-align: left;
-        }
-    </style>
-</head>
-<body>
+{% extends 'Base.html' %}
 
-<h1>Industrije (jobIndustry)</h1>
+{% block title %} Industrije (jobIndustry) {% endblock %}
 
-<button onclick="loadIndustriesFromDb()">Prikaži iz baze</button>
-<button onclick="importIndustries()">Preuzmi i importuj podatke</button>
-<br><br>
+{% block sadrzaj %}
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Industrije (jobIndustry)</title>
+    </head>
+    <body>
 
-<table id="industriesTable">
-    <thead>
-        <tr>
-            <th>Id</th>
-            <th>Naziv</th>
-        </tr>
-    </thead>
-    <tbody>
-        <!-- Industrije će biti učitane ovde -->
-    </tbody>
-</table>
+    <h1>Industrije (jobIndustry)</h1>
 
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script>
-    function loadIndustriesFromDb() {
-        $.get('/api/industries', function(data) {
-            populateTable(data);
+    <table id="industriesTable" border="1">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Naziv</th>
+                <th>Akcije</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for industry in industries_data %}
+            <tr>
+                <td>{{ industry.id }}</td>
+                <td>{{ industry.name }}</td>
+                <td>
+                    <button class="updateBtn" data-id="{{ industry.id }}">Ažuriraj</button>
+                    <button class="deleteBtn" data-id="{{ industry.id }}">Obriši</button>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <form id="addIndustryForm">
+        <input type="text" id="newIndustry" placeholder="Unesite novu industriju">
+        <button type="submit">Dodaj industriju</button>
+    </form>
+
+    <button id="importBtn">Importaj industrije</button>
+
+    <script>
+        document.getElementById('importBtn').addEventListener('click', function() {
+            fetch('/import-industries', { method: 'POST' })
+                .then(response => response.json())
+                .then(data => alert(data.message))
+                .catch(error => console.error('Došlo je do greške:', error));
         });
-    }
 
-    function importIndustries() {
-        $.post('/api/industries/import', function() {
-            alert('Podaci su uspešno importovani u bazu.');
-            loadIndustriesFromDb(); // Osveži prikaz iz baze nakon importovanja
+        document.getElementById('addIndustryForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const newIndustry = document.getElementById('newIndustry').value;
+            fetch('/add-industry', { method: 'POST', body: new URLSearchParams({ new_industry: newIndustry }) })
+                .then(response => response.json())
+                .then(data => {
+                    alert(data.message);
+                    location.reload(); // Refresh page to see the added industry
+                })
+                .catch(error => console.error('Došlo je do greške:', error));
         });
-    }
 
-    function populateTable(data) {
-        const tbody = $('#industriesTable tbody');
-        tbody.empty();
-        data.forEach(function(industry) {
-            tbody.append(`
-                <tr>
-                    <td>${industry.id}</td>
-                    <td>${industry.name}</td>
-                </tr>
-            `);
+        document.querySelectorAll('.updateBtn').forEach(button => {
+            button.addEventListener('click', function() {
+                const id = this.dataset.id;
+                const updatedIndustry = prompt('Unesite ažuriranu industriju:');
+                if (updatedIndustry) {
+                    fetch(`/update-industry/${id}`, { method: 'PUT', body: new URLSearchParams({ updated_industry: updatedIndustry }) })
+                        .then(response => response.json())
+                        .then(data => {
+                            alert(data.message);
+                            location.reload(); // Refresh page to see the updated industry
+                        })
+                        .catch(error => console.error('Došlo je do greške:', error));
+                }
+            });
         });
-    }
-</script>
 
-</body>
-</html>
+        document.querySelectorAll('.deleteBtn').forEach(button => {
+            button.addEventListener('click', function() {
+                const id = this.dataset.id;
+                if (confirm('Da li ste sigurni da želite obrisati ovu industriju?')) {
+                    fetch(`/delete-industry/${id}`, { method: 'DELETE' })
+                        .then(response => response.json())
+                        .then(data => {
+                            alert(data.message);
+                            location.reload(); // Refresh page to see the deleted industry
+                        })
+                        .catch(error => console.error('Došlo je do greške:', error));
+                }
+            });
+        });
+    </script>
+
+    </body>
+    </html>
+{% endblock %}

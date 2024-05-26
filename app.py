@@ -1,5 +1,5 @@
 
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, json
 # ORM sustav za rad s SQLite bazom
 from flask_sqlalchemy import SQLAlchemy
 import requests
@@ -28,12 +28,18 @@ class Jobs(db.Model):
     datum_objave = db.Column(db.Date, nullable=False)
 
 class Location(db.Model):
+    __tablename__ = 'locations'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(80), nullable=False)
 
 class Industry(db.Model):
+    __tablename__ = 'industries'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(80), nullable=False)
+
+class Item(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
 
 
 # definiramo rute
@@ -79,58 +85,124 @@ def jobs():
 
 
 
+locations_data = [
+    {"id": 1, "name": "United States"},
+    {"id": 2, "name": "Canada"},
+    {"id": 3, "name": "United Kingdom"},
+    {"id": 4, "name": "Germany"},
+    {"id": 5, "name": "France"},
+    {"id": 6, "name": "Australia"},
+    {"id": 7, "name": "Brazil"},
+    {"id": 8, "name": "Japan"},
+    {"id": 9, "name": "India"},
+    {"id": 10, "name": "China"}
+]
+
+
 @app.route('/locations')
 def locations():
-    return 'locations...'
+    return render_template('locations.html', locations_data=locations_data)
 
+# Route for importing locations from API
+@app.route('/import-locations', methods=['POST'])
+def import_locations():
+    # Logic for importing locations from API
+    return jsonify({'message': 'Locations imported successfully'})
 
-# @app.route('/industries')
-# def industries():
-#     return 'industries...'
+# Route for adding a new location
+@app.route('/add-location', methods=['POST'])
+def add_location():
+    new_location = request.form.get('new_location')
+    locations_data.append({"id": len(locations_data) + 1, "name": new_location})
+    return jsonify({'message': 'Location added successfully'})
 
+# Route for updating a location
+@app.route('/update-location/<int:id>', methods=['PUT'])
+def update_location(id):
+    updated_location = request.form.get('updated_location')
+    for location in locations_data:
+        if location['id'] == id:
+            location['name'] = updated_location
+            return jsonify({'message': 'Location updated successfully'})
+    return jsonify({'error': 'Location not found'}), 404
 
-@app.route('/industries', methods=['GET'])
+# Route for deleting a location
+@app.route('/delete-location/<int:id>', methods=['DELETE'])
+def delete_location(id):
+    for location in locations_data:
+        if location['id'] == id:
+            locations_data.remove(location)
+            return jsonify({'message': 'Location deleted successfully'})
+    return jsonify({'error': 'Location not found'}), 404
+
+industries_data = [
+    {"id": 1, "name": "Information Technology"},
+    {"id": 2, "name": "Finance"},
+    {"id": 3, "name": "Healthcare"},
+    {"id": 4, "name": "Education"},
+    {"id": 5, "name": "Marketing"},
+    {"id": 6, "name": "Retail"},
+    {"id": 7, "name": "Manufacturing"},
+    {"id": 8, "name": "Hospitality"},
+    {"id": 9, "name": "Real Estate"},
+    {"id": 10, "name": "Transportation"}
+]
+
+@app.route('/industries')
 def industries():
-    industries = Industry.query.all()
-    return jsonify([{'id': ind.id, 'name': ind.name} for ind in industries])
+    return render_template('industries.html', industries_data=industries_data)
+
+# Route for importing industries from API
+@app.route('/import-industries', methods=['POST'])
+def import_industries():
+    # Logic for importing industries from API
+    return jsonify({'message': 'Industries imported successfully'})
+
+# Route for adding a new industry
+@app.route('/add-industry', methods=['POST'])
+def add_industry():
+    new_industry = request.form.get('new_industry')
+    industries_data.append({"id": len(industries_data) + 1, "name": new_industry})
+    return jsonify({'message': 'Industry added successfully'})
+
+# Route for updating an industry
+@app.route('/update-industry/<int:id>', methods=['PUT'])
+def update_industry(id):
+    updated_industry = request.form.get('updated_industry')
+    for industry in industries_data:
+        if industry['id'] == id:
+            industry['name'] = updated_industry
+            return jsonify({'message': 'Industry updated successfully'})
+    return jsonify({'error': 'Industry not found'}), 404
+
+# Route for deleting an industry
+@app.route('/delete-industry/<int:id>', methods=['DELETE'])
+def delete_industry(id):
+    for industry in industries_data:
+        if industry['id'] == id:
+            industries_data.remove(industry)
+            return jsonify({'message': 'Industry deleted successfully'})
+    return jsonify({'error': 'Industry not found'}), 404
 
 
-# @app.route('/industries/import', methods=['POST'])
-# def import_industries():
-#     url_jobs = 'https://jobicy.com/api/v2/remote-jobs?count=10&tag=python'
-#     response = requests.get(url_jobs)
-#
-#
-#     jobs = response.json().get('jobs', [])
-#     for job in jobs:
-#         industry_name = job.get('jobIndustry')[0] if job.get('jobIndustry') else ''
-#         if industry_name:
-#             existing_industry = Industry.query.filter_by(name=industry_name).first()
-#             if not existing_industry:
-#                 new_industry = Industry(name=industry_name)
-#                 db.session.add(new_industry)
-#     db.session.commit()
-#     return '', 204
 
-@app.route('/api')
-def api():
-    return 'api...'
+jobs_data = [
+    {"title": "Machine Learning Engineer", "company": "Tech Innovations Ltd.", "type": "Full-time", "location": "Remote"},
+    {"title": "UX/UI Designer", "company": "Creative Solutions Inc.", "type": "Contract", "location": "Remote"},
+    {"title": "Backend Developer", "company": "Software Experts LLC", "type": "Part-time", "location": "Remote"},
+    {"title": "Product Manager", "company": "Digital Ventures Co.", "type": "Full-time", "location": "Remote"},
+    {"title": "Content Writer", "company": "Marketing Maven", "type": "Contract", "location": "Remote"},
+    {"title": "Frontend Developer", "company": "Web Wizards Ltd.", "type": "Part-time", "location": "Remote"},
+    {"title": "Business Analyst", "company": "Strategy Masters Inc.", "type": "Full-time", "location": "Remote"},
+    {"title": "Graphic Designer", "company": "Visual Creations Co.", "type": "Contract", "location": "Remote"},
+    {"title": "Network Engineer", "company": "Connectivity Solutions LLC", "type": "Part-time", "location": "Remote"}
+]
 
-# @app.route('/api/locations', methods=['GET'])
-# def get_locations():
-#     locations = Location.query.all()
-#     return jsonify([{'id': loc.id, 'name': loc.name} for loc in locations])
-#
-# @app.route('/api/locations', methods=['POST'])
-# def add_location():
-#     data = request.json
-#     if not data or not 'name' in data:
-#         new_location = Location(name=data['name'])
-#     db.session.add(new_location)
-#     db.session.commit()
-#     return jsonify({'id': new_location.id, 'name': new_location.name}), 201
 
-#
+@app.route('/get_api_data')
+def get_api_data():
+    return jsonify(jobs_data)
+
 
 if __name__ == '__main__':
     with app.app_context():
